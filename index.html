@@ -3,2176 +3,720 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Presensi Kelas · Dashboard</title>
+    <title>Presensi Kelas · QR Scanner</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;600;700&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         :root {
-            --ink-1: #0b1020;
-            --ink-2: #131a2e;
-            --ink-3: #1e2742;
-            --ink-4: #2a3556;
-            --line: rgba(255, 255, 255, 0.07);
-            --line-2: rgba(255, 255, 255, 0.12);
-            --text: #e8ecf7;
-            --text-soft: #a2adc8;
-            --text-dim: #6b7699;
-            --neon: #00ffb2;
-            --neon-2: #00d4ff;
-            --neon-3: #b14dff;
-            --hot: #ff2e63;
-            --warn: #ffb547;
-            --glass: rgba(19, 26, 46, 0.7);
-            --radius-lg: 22px;
-            --radius: 16px;
-            --radius-sm: 12px;
-            --radius-xs: 8px;
+            --bg: #0b1020; --card: #131a2e; --card2: #1e2742;
+            --line: rgba(255,255,255,0.08);
+            --text: #e8ecf7; --text-soft: #a2adc8; --text-dim: #6b7699;
+            --neon: #00ffb2; --neon2: #00d4ff; --hot: #ff2e63; --warn: #ffb547;
         }
-
-        html, body {
-            height: 100%;
-        }
-
         body {
-            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--ink-1);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            overflow-x: hidden;
-            -webkit-font-smoothing: antialiased;
-            position: relative;
-        }
-
-        /* Ambient grid background */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg); color: var(--text);
+            min-height: 100vh; padding: 16px;
             background-image:
-                linear-gradient(rgba(0, 255, 178, 0.035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 178, 0.035) 1px, transparent 1px);
-            background-size: 44px 44px;
-            pointer-events: none;
-            z-index: 0;
-            mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
-            -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 80%);
+                radial-gradient(circle at 20% 30%, rgba(0,255,178,0.08), transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(0,212,255,0.08), transparent 40%);
+            background-attachment: fixed;
         }
-
-        /* Glow spots */
-        body::after {
-            content: '';
-            position: fixed;
-            top: -20%;
-            right: -10%;
-            width: 60vw;
-            height: 60vw;
-            background: radial-gradient(circle, rgba(0, 212, 255, 0.08), transparent 60%);
-            pointer-events: none;
-            z-index: 0;
-            animation: glowMove 15s ease-in-out infinite;
+        .container { max-width: 480px; margin: 0 auto; }
+        .header {
+            text-align: center; margin-bottom: 20px;
+            padding: 20px;
+            background: linear-gradient(180deg, var(--card2), var(--card));
+            border: 1px solid var(--line);
+            border-radius: 20px;
         }
-
-        @keyframes glowMove {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(-8%, 8%); }
+        .header .logo {
+            width: 60px; height: 60px; margin: 0 auto 12px;
+            background: linear-gradient(135deg, var(--neon), var(--neon2));
+            border-radius: 18px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; color: var(--bg);
+            box-shadow: 0 0 30px rgba(0,255,178,0.4);
         }
-
-        /* ============ APP SHELL LAYOUT ============ */
-        .app {
-            display: grid;
-            grid-template-columns: 68px 1fr;
-            grid-template-rows: 60px 1fr;
-            grid-template-areas:
-                "rail topbar"
-                "rail main";
-            min-height: 100vh;
-            width: 100%;
-            position: relative;
-            z-index: 1;
+        .header h1 {
+            font-size: 22px; font-weight: 800;
+            background: linear-gradient(135deg, #fff, var(--neon));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
         }
-
-        /* ---- Left Rail ---- */
-        .rail {
-            grid-area: rail;
-            background: var(--ink-2);
-            border-right: 1px solid var(--line);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 14px 0;
-            gap: 8px;
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            z-index: 20;
-        }
-
-        .rail-logo {
-            width: 44px;
-            height: 44px;
-            background: linear-gradient(135deg, var(--neon), var(--neon-2));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--ink-1);
-            font-size: 20px;
-            margin-bottom: 10px;
-            box-shadow: 0 0 24px rgba(0, 255, 178, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .rail-logo::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.4) 50%, transparent 60%);
-            animation: shine 3s ease-in-out infinite;
-        }
-
-        @keyframes shine {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .rail-btn {
-            width: 44px;
-            height: 44px;
-            background: transparent;
-            border: none;
-            border-radius: 12px;
-            color: var(--text-dim);
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-            text-decoration: none;
-        }
-
-        .rail-btn:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--neon);
-            transform: translateY(-1px);
-        }
-
-        .rail-btn.active {
-            background: rgba(0, 255, 178, 0.1);
-            color: var(--neon);
-        }
-
-        .rail-btn.active::before {
-            content: '';
-            position: absolute;
-            left: -14px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 3px;
-            height: 24px;
-            background: var(--neon);
-            border-radius: 0 3px 3px 0;
-            box-shadow: 0 0 12px var(--neon);
-        }
-
-        .rail-spacer { flex: 1; }
-
-        /* ---- Top Bar ---- */
-        .topbar {
-            grid-area: topbar;
-            background: rgba(19, 26, 46, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--line);
-            padding: 0 20px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            position: sticky;
-            top: 0;
-            z-index: 15;
-        }
-
-        .topbar-title {
-            font-size: 15px;
-            font-weight: 700;
-            letter-spacing: -0.3px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .topbar-title .dot {
-            width: 8px;
-            height: 8px;
-            background: var(--neon);
-            border-radius: 50%;
-            box-shadow: 0 0 12px var(--neon);
-            animation: blinkDot 2s ease-in-out infinite;
-        }
-
-        @keyframes blinkDot {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .topbar-spacer { flex: 1; }
-
-        .topbar-stat {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
-            background: rgba(255, 255, 255, 0.03);
+        .header p { color: var(--text-soft); font-size: 13px; }
+        .conn {
+            display: inline-flex; align-items: center; gap: 8px;
+            margin-top: 12px; padding: 6px 14px;
+            background: rgba(0,0,0,0.3);
             border: 1px solid var(--line);
             border-radius: 999px;
-            font-size: 11.5px;
-            font-weight: 600;
-            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px; font-family: 'IBM Plex Mono', monospace;
             color: var(--text-soft);
         }
+        .conn .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .conn .dot.online { background: var(--neon); box-shadow: 0 0 10px var(--neon); }
+        .conn .dot.offline { background: var(--hot); box-shadow: 0 0 10px var(--hot); }
+        .conn .dot.checking { background: var(--warn); box-shadow: 0 0 10px var(--warn); animation: blink 0.8s infinite; }
+        @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
 
-        .topbar-stat i {
-            font-size: 11px;
-            color: var(--neon);
+        .stats {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 10px; margin-bottom: 16px;
         }
-
-        .topbar-stat .count {
-            color: var(--text);
-            font-weight: 700;
+        .stat {
+            background: var(--card); border: 1px solid var(--line);
+            border-radius: 16px; padding: 14px;
+            position: relative; overflow: hidden;
         }
-
-        .topbar-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--neon-3), var(--neon-2));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
-            font-weight: 700;
-            font-family: 'IBM Plex Mono', monospace;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 0 20px rgba(177, 77, 255, 0.3);
+        .stat::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0;
+            height: 2px; background: var(--neon);
         }
+        .stat.pink::before { background: var(--hot); }
+        .stat .label { font-size: 10px; color: var(--text-dim);
+            text-transform: uppercase; letter-spacing: 1px;
+            font-family: 'IBM Plex Mono', monospace; margin-bottom: 6px; }
+        .stat .value { font-size: 26px; font-weight: 800;
+            font-family: 'IBM Plex Mono', monospace; }
+        .stat .value.neon { color: var(--neon); }
+        .stat .value.pink { color: var(--hot); }
 
-        /* ---- Main Content Grid ---- */
-        .main {
-            grid-area: main;
-            padding: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: auto auto auto;
-            gap: 16px;
-            grid-template-areas:
-                "scanner stats"
-                "scanner roster"
-                "tools roster";
-            align-content: start;
-            min-height: calc(100vh - 60px);
+        .scanner-box {
+            background: var(--card); border: 1px solid var(--line);
+            border-radius: 20px; overflow: hidden; margin-bottom: 16px;
         }
-
-        /* ---- Panel Base ---- */
-        .panel {
-            background: linear-gradient(180deg, rgba(30, 39, 66, 0.6), rgba(19, 26, 46, 0.6));
-            border: 1px solid var(--line);
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            position: relative;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            box-shadow:
-                0 4px 24px rgba(0, 0, 0, 0.25),
-                inset 0 1px 0 rgba(255, 255, 255, 0.04);
-            animation: panelIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-        }
-
-        .panel:nth-child(1) { animation-delay: 0.05s; }
-        .panel:nth-child(2) { animation-delay: 0.1s; }
-        .panel:nth-child(3) { animation-delay: 0.15s; }
-        .panel:nth-child(4) { animation-delay: 0.2s; }
-
-        @keyframes panelIn {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .panel-header {
-            padding: 14px 18px;
+        .scanner-header {
+            padding: 12px 16px; display: flex; align-items: center; gap: 10px;
             border-bottom: 1px solid var(--line);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: rgba(255, 255, 255, 0.015);
+            background: rgba(0,0,0,0.2);
+            font-size: 13px; font-weight: 700;
         }
-
-        .panel-header .icon {
-            width: 30px;
-            height: 30px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            flex-shrink: 0;
+        .scanner-header i { color: var(--neon); }
+        .scanner-wrap {
+            position: relative; width: 100%; aspect-ratio: 4/3;
+            background: #05080f; overflow: hidden;
         }
+        #reader { width: 100% !important; height: 100% !important; }
+        #reader video { width: 100% !important; height: 100% !important;
+            object-fit: cover !important; }
+        #reader > div:not(:first-child) { display: none !important; }
+        #reader > div:first-child { width: 100% !important; height: 100% !important; }
+        #reader > div:first-child > div:first-child { width: 100% !important; height: 100% !important; }
 
-        .icon-neon { background: rgba(0, 255, 178, 0.12); color: var(--neon); border: 1px solid rgba(0, 255, 178, 0.2); }
-        .icon-cyan { background: rgba(0, 212, 255, 0.12); color: var(--neon-2); border: 1px solid rgba(0, 212, 255, 0.2); }
-        .icon-violet { background: rgba(177, 77, 255, 0.12); color: var(--neon-3); border: 1px solid rgba(177, 77, 255, 0.2); }
-        .icon-warn { background: rgba(255, 181, 71, 0.12); color: var(--warn); border: 1px solid rgba(255, 181, 71, 0.2); }
-
-        .panel-header .title {
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: -0.2px;
-        }
-
-        .panel-header .subtitle {
-            font-size: 10.5px;
-            color: var(--text-dim);
-            font-weight: 500;
-            margin-top: 1px;
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        .panel-header .spacer { flex: 1; }
-
-        .panel-header .badge {
-            font-size: 10px;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 999px;
-            background: rgba(0, 255, 178, 0.1);
-            color: var(--neon);
-            border: 1px solid rgba(0, 255, 178, 0.2);
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        .panel-body {
-            padding: 16px 18px;
-        }
-
-        /* ---- Scanner Panel (grid-area: scanner) ---- */
-        .panel-scanner {
-            grid-area: scanner;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .scanner-wrapper {
-            position: relative;
-            background: #05080f;
-            border-radius: var(--radius);
-            overflow: hidden;
-            aspect-ratio: 4 / 3;
-            border: 1px solid var(--line);
-            margin-bottom: 12px;
-        }
-
-        #qr-reader {
-            width: 100% !important;
-            height: 100% !important;
-            background: #05080f;
-            position: relative;
-        }
-
-        #qr-reader video {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover !important;
-            border-radius: 0 !important;
-            display: block !important;
-        }
-
-        #qr-reader > div:not(:first-child) { display: none !important; }
-        #qr-reader > div:first-child { width: 100% !important; height: 100% !important; }
-        #qr-reader > div:first-child > div:first-child { width: 100% !important; height: 100% !important; }
-
-        .scanner-overlay {
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .scan-corner-frame {
-            position: absolute;
-            top: 50%;
-            left: 50%;
+        .scan-frame {
+            position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 58%;
-            aspect-ratio: 1;
-            border-radius: 14px;
-            box-shadow: 0 0 0 4000px rgba(5, 8, 15, 0.7);
+            width: 60%; aspect-ratio: 1;
+            border-radius: 16px;
+            box-shadow: 0 0 0 4000px rgba(5,8,15,0.7);
+            pointer-events: none;
         }
-
-        .scan-corner {
-            position: absolute;
-            width: 28px;
-            height: 28px;
-            border-color: var(--neon);
-            border-style: solid;
-            border-width: 0;
+        .scan-frame .c {
+            position: absolute; width: 28px; height: 28px;
+            border-color: var(--neon); border-style: solid; border-width: 0;
             filter: drop-shadow(0 0 8px var(--neon));
         }
-
-        .sc-tl { top: 0; left: 0; border-top-width: 3px; border-left-width: 3px; border-radius: 12px 0 0 0; }
-        .sc-tr { top: 0; right: 0; border-top-width: 3px; border-right-width: 3px; border-radius: 0 12px 0 0; }
-        .sc-bl { bottom: 0; left: 0; border-bottom-width: 3px; border-left-width: 3px; border-radius: 0 0 0 12px; }
-        .sc-br { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; border-radius: 0 0 12px 0; }
-
+        .c.tl { top: 0; left: 0; border-top-width: 3px; border-left-width: 3px; border-radius: 16px 0 0 0; }
+        .c.tr { top: 0; right: 0; border-top-width: 3px; border-right-width: 3px; border-radius: 0 16px 0 0; }
+        .c.bl { bottom: 0; left: 0; border-bottom-width: 3px; border-left-width: 3px; border-radius: 0 0 0 16px; }
+        .c.br { bottom: 0; right: 0; border-bottom-width: 3px; border-right-width: 3px; border-radius: 0 0 16px 0; }
         .scan-laser {
-            position: absolute;
-            left: 4%;
-            right: 4%;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, var(--neon), var(--neon-2), transparent);
-            animation: laserMove 2.4s ease-in-out infinite;
-            border-radius: 2px;
-            box-shadow: 0 0 16px var(--neon), 0 0 32px rgba(0, 212, 255, 0.5);
+            position: absolute; left: 4%; right: 4%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon), transparent);
+            animation: laser 2.4s infinite; border-radius: 2px;
+            box-shadow: 0 0 16px var(--neon);
         }
-
-        @keyframes laserMove {
+        @keyframes laser {
             0% { top: 4%; opacity: 0.4; }
             50% { top: 96%; opacity: 1; }
             100% { top: 4%; opacity: 0.4; }
         }
-
-        .scanner-hud {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            right: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            z-index: 12;
-        }
-
-        .hud-pill {
-            background: rgba(0, 0, 0, 0.65);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 255, 178, 0.25);
-            border-radius: 999px;
-            padding: 5px 12px;
-            font-size: 10px;
-            font-weight: 600;
-            font-family: 'IBM Plex Mono', monospace;
-            color: var(--neon);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .hud-pill .rec {
-            width: 6px;
-            height: 6px;
-            background: var(--hot);
-            border-radius: 50%;
-            box-shadow: 0 0 8px var(--hot);
-            animation: blinkDot 1s ease-in-out infinite;
-        }
-
-        .hud-pill.paused .rec {
-            background: var(--text-dim);
-            box-shadow: none;
-            animation: none;
-        }
-
-        .scanner-status-line {
-            position: absolute;
-            bottom: 12px;
-            left: 50%;
+        .scan-status {
+            position: absolute; bottom: 12px; left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 255, 178, 0.25);
-            border-radius: 999px;
-            padding: 7px 16px;
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text);
-            white-space: nowrap;
-            z-index: 12;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            background: rgba(0,0,0,0.75); padding: 7px 16px;
+            border-radius: 999px; font-size: 11px;
+            border: 1px solid rgba(0,255,178,0.3);
             font-family: 'IBM Plex Mono', monospace;
+            white-space: nowrap;
         }
-
-        .scanner-status-line i {
-            color: var(--neon);
-            animation: pulseIcon 1.4s ease-in-out infinite;
-        }
-
-        @keyframes pulseIcon {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.35; }
-        }
+        .scan-status i { color: var(--neon); margin-right: 6px; }
 
         .scanner-actions {
-            display: flex;
-            gap: 8px;
+            display: flex; gap: 8px; padding: 12px;
         }
-
         .btn {
-            padding: 12px 16px;
-            border-radius: var(--radius-sm);
-            font-weight: 700;
-            font-size: 12px;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            text-decoration: none;
-            border: 1px solid transparent;
-            color: var(--text);
-            letter-spacing: -0.2px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn:active { transform: scale(0.97); }
-
-        .btn-scan-start {
-            flex: 1;
-            background: linear-gradient(135deg, var(--neon), var(--neon-2));
-            color: var(--ink-1);
-            box-shadow: 0 4px 20px rgba(0, 255, 178, 0.3);
-        }
-
-        .btn-scan-start:hover {
-            box-shadow: 0 8px 32px rgba(0, 255, 178, 0.5);
-            transform: translateY(-2px);
-        }
-
-        .btn-scan-start.stop {
-            background: linear-gradient(135deg, var(--hot), #ff7a9c);
-            color: white;
-            box-shadow: 0 4px 20px rgba(255, 46, 99, 0.3);
-        }
-
-        .btn-flash {
-            width: 48px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--line-2);
-        }
-
-        .btn-flash:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: var(--neon);
-        }
-
-        .btn-flash.active {
-            background: linear-gradient(135deg, var(--warn), #ffd97a);
-            color: var(--ink-1);
-            border-color: var(--warn);
-            box-shadow: 0 0 24px rgba(255, 181, 71, 0.5);
-        }
-
-        /* ---- Stats Panel (grid-area: stats) ---- */
-        .panel-stats {
-            grid-area: stats;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .stat-card {
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid var(--line);
-            border-radius: var(--radius);
-            padding: 14px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            border-color: var(--line-2);
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--neon), var(--neon-2));
-        }
-
-        .stat-card.pink::before { background: linear-gradient(90deg, var(--hot), var(--neon-3)); }
-        .stat-card.violet::before { background: linear-gradient(90deg, var(--neon-3), var(--neon-2)); }
-        .stat-card.warn::before { background: linear-gradient(90deg, var(--warn), #ffd97a); }
-
-        .stat-label {
-            font-size: 10px;
-            font-weight: 600;
-            color: var(--text-dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-family: 'IBM Plex Mono', monospace;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
+            padding: 12px 16px; border: none; border-radius: 12px;
+            font-family: inherit; font-weight: 700; font-size: 12px;
+            cursor: pointer; transition: all 0.2s;
+            display: inline-flex; align-items: center; justify-content: center;
             gap: 6px;
         }
-
-        .stat-label i { font-size: 10px; }
-
-        .stat-value {
-            font-size: 26px;
-            font-weight: 800;
-            letter-spacing: -1px;
-            font-family: 'IBM Plex Mono', monospace;
-            line-height: 1;
-            display: flex;
-            align-items: baseline;
-            gap: 4px;
+        .btn:active { transform: scale(0.97); }
+        .btn-scan {
+            flex: 1;
+            background: linear-gradient(135deg, var(--neon), var(--neon2));
+            color: var(--bg);
+            box-shadow: 0 4px 20px rgba(0,255,178,0.3);
+        }
+        .btn-scan.stop {
+            background: linear-gradient(135deg, var(--hot), #ff7a9c);
+            color: white;
+        }
+        .btn-flash {
+            width: 48px;
+            background: rgba(255,255,255,0.05);
+            color: var(--text); border: 1px solid var(--line);
+        }
+        .btn-flash.active {
+            background: linear-gradient(135deg, var(--warn), #ffd97a);
+            color: var(--bg);
         }
 
-        .stat-value .unit {
-            font-size: 11px;
-            color: var(--text-dim);
-            font-weight: 500;
-            letter-spacing: 0;
+        .roster {
+            background: var(--card); border: 1px solid var(--line);
+            border-radius: 20px; overflow: hidden;
         }
-
-        .stat-value.neon { color: var(--neon); text-shadow: 0 0 20px rgba(0, 255, 178, 0.4); }
-        .stat-value.pink { color: var(--hot); text-shadow: 0 0 20px rgba(255, 46, 99, 0.4); }
-        .stat-value.violet { color: var(--neon-3); text-shadow: 0 0 20px rgba(177, 77, 255, 0.4); }
-        .stat-value.warn { color: var(--warn); text-shadow: 0 0 20px rgba(255, 181, 71, 0.4); }
-
-        .progress-bar {
-            margin-top: 10px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--neon), var(--neon-2));
-            border-radius: 4px;
-            width: 0%;
-            transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 0 12px rgba(0, 255, 178, 0.6);
-        }
-
-        /* ---- Roster Panel (grid-area: roster) ---- */
-        .panel-roster {
-            grid-area: roster;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .roster-search {
-            padding: 10px 14px;
+        .roster-header {
+            padding: 14px 16px; display: flex; align-items: center;
+            justify-content: space-between;
             border-bottom: 1px solid var(--line);
-            background: rgba(0, 0, 0, 0.15);
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            background: rgba(0,0,0,0.2);
+            font-size: 13px; font-weight: 700;
         }
-
-        .roster-search i {
-            color: var(--text-dim);
-            font-size: 12px;
+        .roster-header i { color: var(--neon); margin-right: 6px; }
+        .roster-header .count {
+            font-size: 11px; color: var(--text-dim);
+            font-family: 'IBM Plex Mono', monospace;
         }
-
-        .roster-search input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: var(--text);
-            font-size: 12.5px;
-            font-family: inherit;
-            outline: none;
-            font-weight: 500;
-        }
-
-        .roster-search input::placeholder {
-            color: var(--text-dim);
-        }
-
-        .roster-list {
-            flex: 1;
-            overflow-y: auto;
-            max-height: 420px;
-            padding: 8px;
-        }
-
-        .roster-list::-webkit-scrollbar { width: 6px; }
-        .roster-list::-webkit-scrollbar-track { background: transparent; }
-        .roster-list::-webkit-scrollbar-thumb {
-            background: var(--line-2);
-            border-radius: 6px;
-        }
-        .roster-list::-webkit-scrollbar-thumb:hover { background: var(--neon); }
-
-        .roster-item {
-            display: grid;
-            grid-template-columns: 36px 1fr auto;
-            gap: 10px;
-            align-items: center;
-            padding: 10px 12px;
-            border-radius: var(--radius-sm);
+        .roster-list { max-height: 400px; overflow-y: auto; padding: 8px; }
+        .roster-list::-webkit-scrollbar { width: 4px; }
+        .roster-list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+        .mhs {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 12px; border-radius: 12px;
             margin-bottom: 4px;
             transition: all 0.2s;
             border: 1px solid transparent;
-            cursor: default;
         }
-
-        .roster-item:hover {
-            background: rgba(255, 255, 255, 0.025);
-            border-color: var(--line);
+        .mhs:hover { background: rgba(255,255,255,0.03); }
+        .mhs.hadir {
+            background: rgba(0,255,178,0.05);
+            border-color: rgba(0,255,178,0.2);
         }
-
-        .roster-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, var(--ink-3), var(--ink-4));
-            border: 1px solid var(--line-2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--text-soft);
+        .mhs-avatar {
+            width: 38px; height: 38px; border-radius: 12px;
+            background: linear-gradient(135deg, var(--card2), var(--card));
+            border: 1px solid var(--line);
+            display: flex; align-items: center; justify-content: center;
             font-family: 'IBM Plex Mono', monospace;
+            font-weight: 700; font-size: 13px; color: var(--text-soft);
             flex-shrink: 0;
         }
-
-        .roster-item.hadir .roster-avatar {
-            background: linear-gradient(135deg, rgba(0, 255, 178, 0.15), rgba(0, 212, 255, 0.15));
+        .mhs.hadir .mhs-avatar {
+            background: linear-gradient(135deg, rgba(0,255,178,0.2), rgba(0,212,255,0.2));
             color: var(--neon);
-            border-color: rgba(0, 255, 178, 0.3);
+            border-color: rgba(0,255,178,0.3);
         }
-
-        .roster-info {
-            min-width: 0;
+        .mhs-info { flex: 1; min-width: 0; }
+        .mhs-name {
+            font-size: 13px; font-weight: 600; color: var(--text);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-
-        .roster-name {
-            font-size: 12.5px;
-            font-weight: 600;
-            color: var(--text);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            line-height: 1.2;
-        }
-
-        .roster-meta {
-            font-size: 10px;
-            color: var(--text-dim);
+        .mhs-meta {
+            font-size: 10px; color: var(--text-dim);
             font-family: 'IBM Plex Mono', monospace;
-            display: flex;
-            gap: 8px;
             margin-top: 2px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
-
-        .roster-meta span {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .roster-meta .nim-tag {
-            color: var(--neon-2);
-            font-weight: 600;
-        }
-
-        .roster-status {
-            font-size: 9.5px;
-            font-weight: 700;
-            padding: 4px 10px;
-            border-radius: 999px;
+        .mhs-meta .nim { color: var(--neon2); font-weight: 600; }
+        .mhs-status {
+            font-size: 10px; font-weight: 700;
+            padding: 4px 10px; border-radius: 999px;
             font-family: 'IBM Plex Mono', monospace;
             letter-spacing: 0.5px;
-            text-transform: uppercase;
-            white-space: nowrap;
-            flex-shrink: 0;
         }
-
-        .roster-status.hadir {
-            background: rgba(0, 255, 178, 0.12);
-            color: var(--neon);
-            border: 1px solid rgba(0, 255, 178, 0.3);
+        .mhs-status.hadir {
+            background: rgba(0,255,178,0.15); color: var(--neon);
+            border: 1px solid rgba(0,255,178,0.3);
         }
-
-        .roster-status.belum {
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--text-dim);
+        .mhs-status.belum {
+            background: rgba(255,255,255,0.05); color: var(--text-dim);
             border: 1px solid var(--line);
         }
-
-        .roster-empty {
-            padding: 40px 20px;
-            text-align: center;
-            color: var(--text-dim);
-            font-size: 12px;
+        .loading {
+            padding: 40px 20px; text-align: center;
+            color: var(--text-dim); font-size: 13px;
         }
+        .loading i { font-size: 24px; margin-bottom: 10px; display: block; color: var(--neon); }
 
-        .roster-empty i {
-            font-size: 28px;
-            display: block;
-            margin-bottom: 12px;
-            color: var(--text-dim);
-            opacity: 0.5;
-        }
-
-        /* ---- Tools Panel (grid-area: tools) ---- */
-        .panel-tools {
-            grid-area: tools;
-        }
-
-        .tools-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .tool-btn {
-            padding: 14px;
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid var(--line);
-            border-radius: var(--radius);
-            color: var(--text);
-            font-family: inherit;
-            font-size: 11.5px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            position: relative;
-            overflow: hidden;
-            letter-spacing: -0.2px;
-        }
-
-        .tool-btn:hover {
-            border-color: var(--line-2);
-            background: rgba(255, 255, 255, 0.04);
-            transform: translateY(-2px);
-        }
-
-        .tool-btn .tool-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 13px;
-            flex-shrink: 0;
-            transition: all 0.25s;
-        }
-
-        .tool-btn:hover .tool-icon {
-            transform: scale(1.1) rotate(-5deg);
-        }
-
-        .tool-icon.neon { background: rgba(0, 255, 178, 0.12); color: var(--neon); border: 1px solid rgba(0, 255, 178, 0.2); }
-        .tool-icon.cyan { background: rgba(0, 212, 255, 0.12); color: var(--neon-2); border: 1px solid rgba(0, 212, 255, 0.2); }
-        .tool-icon.violet { background: rgba(177, 77, 255, 0.12); color: var(--neon-3); border: 1px solid rgba(177, 77, 255, 0.2); }
-        .tool-icon.warn { background: rgba(255, 181, 71, 0.12); color: var(--warn); border: 1px solid rgba(255, 181, 71, 0.2); }
-
-        .tool-btn .tool-text {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 1px;
-            min-width: 0;
-        }
-
-        .tool-btn .tool-text small {
-            font-size: 9.5px;
-            color: var(--text-dim);
-            font-weight: 500;
-            font-family: 'IBM Plex Mono', monospace;
-        }
-
-        /* ---- QR Code Panel (inside tools, hidden by default) ---- */
-        .qr-showcase {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            padding: 14px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--line);
-            border-radius: var(--radius);
-            margin-bottom: 10px;
-        }
-
-        .qr-showcase .qr-box {
-            width: 100px;
-            height: 100px;
-            background: white;
-            border-radius: 12px;
-            padding: 6px;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--line-2);
-        }
-
-        .qr-showcase .qr-box img {
-            width: 100%;
-            height: 100%;
-            display: block;
-            border-radius: 6px;
-        }
-
-        .qr-showcase .qr-detail {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .qr-showcase .qr-detail h4 {
-            font-size: 12px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
-
-        .qr-showcase .qr-detail p {
-            font-size: 10.5px;
-            color: var(--text-dim);
-            font-family: 'IBM Plex Mono', monospace;
-            margin-bottom: 8px;
-            line-height: 1.5;
-        }
-
-        .qr-showcase .qr-detail .mini-btn {
-            padding: 5px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--line-2);
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--text);
-            font-size: 10px;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .qr-showcase .qr-detail .mini-btn:hover {
-            background: rgba(0, 255, 178, 0.1);
-            border-color: var(--neon);
-            color: var(--neon);
-        }
-
-        /* ---- Input Group (for generate QR) ---- */
-        .input-group {
-            display: flex;
-            gap: 8px;
-        }
-
-        .input-group input {
-            flex: 1;
-            padding: 11px 14px;
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid var(--line);
-            border-radius: var(--radius-sm);
-            color: var(--text);
-            font-family: 'IBM Plex Mono', monospace;
-            font-size: 12.5px;
-            font-weight: 500;
-            outline: none;
-            transition: all 0.25s;
-        }
-
-        .input-group input:focus {
-            border-color: var(--neon);
-            box-shadow: 0 0 0 3px rgba(0, 255, 178, 0.1);
-            background: rgba(0, 255, 178, 0.03);
-        }
-
-        .input-group input::placeholder {
-            color: var(--text-dim);
-            font-family: 'Outfit', sans-serif;
-        }
-
-        .input-group button {
-            padding: 11px 18px;
-            background: linear-gradient(135deg, var(--neon-3), var(--neon-2));
-            color: white;
-            border: none;
-            border-radius: var(--radius-sm);
-            font-weight: 700;
-            font-size: 12px;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.25s;
-            white-space: nowrap;
-            box-shadow: 0 4px 16px rgba(177, 77, 255, 0.3);
-        }
-
-        .input-group button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(177, 77, 255, 0.5);
-        }
-
-        /* ---- QR Preview Modal ---- */
-        .qr-preview {
-            position: fixed;
-            inset: 0;
-            background: rgba(5, 8, 15, 0.85);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            z-index: 100;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .qr-preview.show {
-            display: flex;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .qr-preview-card {
-            background: linear-gradient(180deg, var(--ink-2), var(--ink-1));
-            border: 1px solid var(--line-2);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            max-width: 360px;
-            width: 100%;
-            text-align: center;
-            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(0, 255, 178, 0.1);
-            animation: modalIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes modalIn {
-            from { opacity: 0; transform: scale(0.9) translateY(20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        .qr-preview-card h3 {
-            font-size: 15px;
-            font-weight: 700;
-            margin-bottom: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .qr-preview-card h3 i { color: var(--neon); }
-
-        .qr-preview-card img {
-            max-width: 200px;
-            border-radius: 16px;
-            background: white;
-            padding: 10px;
-            margin: 0 auto 14px;
-            display: block;
-            box-shadow: 0 0 40px rgba(0, 255, 178, 0.15);
-        }
-
-        .qr-preview-card .qr-info {
-            font-size: 11.5px;
-            color: var(--text-soft);
-            line-height: 1.7;
-            font-family: 'IBM Plex Mono', monospace;
-            margin-bottom: 16px;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.25);
-            border-radius: var(--radius-sm);
-            border: 1px solid var(--line);
-            text-align: left;
-        }
-
-        .qr-preview-card .qr-info strong {
-            color: var(--neon);
-            font-weight: 700;
-        }
-
-        .qr-preview-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .qr-preview-actions button {
-            flex: 1;
-            padding: 11px;
-            border: 1px solid var(--line-2);
-            border-radius: var(--radius-sm);
-            font-weight: 700;
-            font-size: 12px;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.25s;
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--text);
-        }
-
-        .qr-preview-actions .dl {
-            background: linear-gradient(135deg, var(--neon), var(--neon-2));
-            color: var(--ink-1);
-            border-color: transparent;
-            box-shadow: 0 4px 16px rgba(0, 255, 178, 0.3);
-        }
-
-        .qr-preview-actions .dl:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 255, 178, 0.5);
-        }
-
-        .qr-preview-actions button:hover {
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .qr-preview-actions .dl:hover {
-            background: linear-gradient(135deg, var(--neon), var(--neon-2));
-        }
-
-        /* ---- Toast Status ---- */
         .toast {
-            position: fixed;
-            top: 76px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-20px);
-            background: var(--ink-2);
-            border: 1px solid var(--line-2);
-            border-radius: var(--radius);
-            padding: 12px 20px;
-            font-size: 12.5px;
-            font-weight: 600;
-            display: none;
-            align-items: center;
-            gap: 10px;
-            z-index: 200;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-            opacity: 0;
-            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            max-width: calc(100vw - 40px);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            position: fixed; top: 20px; left: 50%;
+            transform: translateX(-50%) translateY(-30px);
+            background: var(--card); padding: 12px 20px;
+            border-radius: 14px; border: 1px solid var(--line);
+            font-size: 13px; font-weight: 600;
+            display: flex; align-items: center; gap: 10px;
+            z-index: 1000;
+            opacity: 0; pointer-events: none;
+            transition: all 0.3s;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+            max-width: 90%; white-space: nowrap;
+            overflow: hidden; text-overflow: ellipsis;
         }
-
         .toast.show {
-            display: flex;
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
+            opacity: 1; transform: translateX(-50%) translateY(0);
         }
-
-        .toast i {
-            font-size: 15px;
-            flex-shrink: 0;
-        }
-
-        .toast.success { border-color: rgba(0, 255, 178, 0.4); }
-        .toast.success i { color: var(--neon); }
-        .toast.error { border-color: rgba(255, 46, 99, 0.4); }
-        .toast.error i { color: var(--hot); }
-        .toast.warning { border-color: rgba(255, 181, 71, 0.4); }
-        .toast.warning i { color: var(--warn); }
-        .toast.info { border-color: rgba(0, 212, 255, 0.4); }
-        .toast.info i { color: var(--neon-2); }
-
-        /* ---- Connection Indicator (Topbar) ---- */
-        .conn-indicator {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 12px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--line);
-            font-size: 11px;
-            font-weight: 600;
-            font-family: 'IBM Plex Mono', monospace;
-            color: var(--text-soft);
-        }
-
-        .conn-indicator .dot {
-            width: 7px;
-            height: 7px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .conn-indicator .dot.online {
-            background: var(--neon);
-            box-shadow: 0 0 12px var(--neon);
-        }
-
-        .conn-indicator .dot.offline {
-            background: var(--hot);
-            box-shadow: 0 0 12px var(--hot);
-            animation: blinkDot 1s ease-in-out infinite;
-        }
-
-        .conn-indicator .dot.checking {
-            background: var(--warn);
-            box-shadow: 0 0 12px var(--warn);
-            animation: blinkDot 0.8s ease-in-out infinite;
-        }
-
-        /* ============ RESPONSIVE ============ */
-        @media (max-width: 900px) {
-            .main {
-                grid-template-columns: 1fr;
-                grid-template-areas:
-                    "scanner"
-                    "stats"
-                    "roster"
-                    "tools";
-            }
-        }
-
-        @media (max-width: 640px) {
-            .app {
-                grid-template-columns: 1fr;
-                grid-template-rows: 56px 1fr 64px;
-                grid-template-areas:
-                    "topbar"
-                    "main"
-                    "rail";
-            }
-
-            .rail {
-                flex-direction: row;
-                height: 64px;
-                padding: 0 12px;
-                border-right: none;
-                border-top: 1px solid var(--line);
-                justify-content: space-around;
-                position: sticky;
-                bottom: 0;
-                top: auto;
-            }
-
-            .rail-logo {
-                width: 40px;
-                height: 40px;
-                font-size: 17px;
-                margin-bottom: 0;
-            }
-
-            .rail-btn.active::before {
-                left: 50%;
-                bottom: -8px;
-                top: auto;
-                transform: translateX(-50%);
-                width: 24px;
-                height: 3px;
-                border-radius: 3px 3px 0 0;
-            }
-
-            .rail-spacer { display: none; }
-
-            .main {
-                padding: 12px;
-                gap: 12px;
-            }
-
-            .topbar {
-                padding: 0 14px;
-                gap: 10px;
-            }
-
-            .topbar-title { font-size: 13px; }
-
-            .topbar-stat:not(:last-of-type) { display: none; }
-
-            .topbar-avatar {
-                width: 32px;
-                height: 32px;
-                font-size: 12px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr 1fr;
-                gap: 8px;
-            }
-
-            .stat-value { font-size: 22px; }
-
-            .tools-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .scan-corner-frame {
-                width: 68%;
-            }
-
-            .hud-pill { font-size: 9px; padding: 4px 10px; }
-
-            .scanner-status-line { font-size: 10px; padding: 6px 12px; }
-        }
+        .toast.success { border-color: rgba(0,255,178,0.4); color: var(--neon); }
+        .toast.error { border-color: rgba(255,46,99,0.4); color: var(--hot); }
+        .toast.warning { border-color: rgba(255,181,71,0.4); color: var(--warn); }
+        .toast.info { border-color: rgba(0,212,255,0.4); color: var(--neon2); }
     </style>
 </head>
 <body>
 
-<div class="app">
+<div class="container">
 
-    <!-- ===== LEFT RAIL ===== -->
-    <aside class="rail">
-        <div class="rail-logo">
-            <i class="fas fa-qrcode"></i>
+    <!-- HEADER -->
+    <div class="header">
+        <div class="logo"><i class="fas fa-qrcode"></i></div>
+        <h1>Presensi Kelas</h1>
+        <p>Scan QR Code untuk Absensi</p>
+        <div class="conn" id="connBox">
+            <span class="dot checking" id="connDot"></span>
+            <span id="connText">Mengecek koneksi...</span>
         </div>
-        <button class="rail-btn active" title="Scanner">
-            <i class="fas fa-camera"></i>
-        </button>
-        <button class="rail-btn" title="Mahasiswa" onclick="document.querySelector('.panel-roster').scrollIntoView({behavior:'smooth'})">
-            <i class="fas fa-users"></i>
-        </button>
-        <button class="rail-btn" title="Refresh" onclick="loadAllData()">
-            <i class="fas fa-sync-alt"></i>
-        </button>
-        <a class="rail-btn" id="railSheetLink" href="#" target="_blank" title="Google Sheets">
-            <i class="fas fa-external-link-alt"></i>
-        </a>
-        <div class="rail-spacer"></div>
-        <button class="rail-btn" title="Info">
-            <i class="fas fa-shield-halved"></i>
-        </button>
-    </aside>
+    </div>
 
-    <!-- ===== TOP BAR ===== -->
-    <header class="topbar">
-        <div class="topbar-title">
-            <span class="dot"></span>
-            Presensi Kelas · Live
+    <!-- STATS -->
+    <div class="stats">
+        <div class="stat">
+            <div class="label"><i class="fas fa-check-circle" style="color:var(--neon);"></i> Hadir</div>
+            <div class="value neon" id="statHadir">0</div>
         </div>
-        <div class="topbar-spacer"></div>
-
-        <div class="conn-indicator" id="connectionStatus">
-            <span class="dot checking" id="statusDot"></span>
-            <span id="statusLabel">Mengecek...</span>
+        <div class="stat pink">
+            <div class="label"><i class="fas fa-clock" style="color:var(--hot);"></i> Belum Hadir</div>
+            <div class="value pink" id="statBelum">0</div>
         </div>
+    </div>
 
-        <div class="topbar-stat">
-            <i class="fas fa-user-check"></i>
-            <span class="count" id="topbarHadir">0</span>
-            <span>/ <span id="topbarTotal">0</span></span>
+    <!-- SCANNER -->
+    <div class="scanner-box">
+        <div class="scanner-header">
+            <i class="fas fa-camera"></i> QR Scanner
         </div>
-
-        <div class="topbar-avatar">QR</div>
-    </header>
-
-    <!-- ===== MAIN GRID ===== -->
-    <main class="main">
-
-        <!-- ==== SCANNER PANEL ==== -->
-        <section class="panel panel-scanner">
-            <div class="panel-header">
-                <div class="icon icon-neon">
-                    <i class="fas fa-camera"></i>
-                </div>
-                <div>
-                    <div class="title">QR Scanner</div>
-                    <div class="subtitle">Arahkan kamera ke QR Code</div>
-                </div>
-                <div class="spacer"></div>
-                <span class="badge">LIVE</span>
+        <div class="scanner-wrap">
+            <div id="reader"></div>
+            <div class="scan-frame">
+                <div class="c tl"></div>
+                <div class="c tr"></div>
+                <div class="c bl"></div>
+                <div class="c br"></div>
+                <div class="scan-laser"></div>
             </div>
-            <div class="panel-body">
-                <div class="scanner-wrapper">
-                    <div id="qr-reader"></div>
-                    <div class="scanner-overlay">
-                        <div class="scan-corner-frame">
-                            <div class="scan-corner sc-tl"></div>
-                            <div class="scan-corner sc-tr"></div>
-                            <div class="scan-corner sc-bl"></div>
-                            <div class="scan-corner sc-br"></div>
-                            <div class="scan-laser"></div>
-                        </div>
-                        <div class="scanner-hud">
-                            <div class="hud-pill" id="hudState">
-                                <span class="rec"></span>
-                                <span id="hudStateText">SCANNING</span>
-                            </div>
-                            <div class="hud-pill">
-                                <i class="fas fa-signal"></i>
-                                <span id="hudNetwork">ONLINE</span>
-                            </div>
-                        </div>
-                        <div class="scanner-status-line">
-                            <i class="fas fa-qrcode"></i>
-                            <span id="scanStatusText">Menunggu kamera aktif...</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="scanner-actions">
-                    <button class="btn btn-scan-start" id="btnStartScan" onclick="toggleScanner()">
-                        <i class="fas fa-play"></i>
-                        <span id="btnScanLabel">Mulai Scan</span>
-                    </button>
-                    <button class="btn btn-flash" id="btnFlash" onclick="toggleFlash()">
-                        <i class="fas fa-bolt"></i>
-                    </button>
-                </div>
+            <div class="scan-status">
+                <i class="fas fa-qrcode"></i>
+                <span id="scanText">Menyiapkan kamera...</span>
             </div>
-        </section>
-
-        <!-- ==== STATS PANEL ==== -->
-        <section class="panel panel-stats">
-            <div class="panel-header">
-                <div class="icon icon-cyan">
-                    <i class="fas fa-chart-simple"></i>
-                </div>
-                <div>
-                    <div class="title">Statistik Hari Ini</div>
-                    <div class="subtitle" id="statsDate">—</div>
-                </div>
-            </div>
-            <div class="panel-body">
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-label">
-                            <i class="fas fa-user-check" style="color:var(--neon)"></i>
-                            Hadir
-                        </div>
-                        <div class="stat-value neon" id="statHadir">0</div>
-                    </div>
-                    <div class="stat-card pink">
-                        <div class="stat-label">
-                            <i class="fas fa-user-clock" style="color:var(--hot)"></i>
-                            Belum
-                        </div>
-                        <div class="stat-value pink" id="statBelum">0</div>
-                    </div>
-                    <div class="stat-card violet">
-                        <div class="stat-label">
-                            <i class="fas fa-users" style="color:var(--neon-3)"></i>
-                            Total
-                        </div>
-                        <div class="stat-value violet" id="statTotal">0</div>
-                    </div>
-                    <div class="stat-card warn">
-                        <div class="stat-label">
-                            <i class="fas fa-percent" style="color:var(--warn)"></i>
-                            Persentase
-                        </div>
-                        <div class="stat-value warn" id="statPercent">0<span class="unit">%</span></div>
-                    </div>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ==== ROSTER PANEL ==== -->
-        <section class="panel panel-roster">
-            <div class="panel-header">
-                <div class="icon icon-violet">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div>
-                    <div class="title">Roster Mahasiswa</div>
-                    <div class="subtitle">Real-time attendance</div>
-                </div>
-                <div class="spacer"></div>
-                <span class="badge" id="totalMahasiswa">0</span>
-            </div>
-
-            <div class="roster-search">
-                <i class="fas fa-search"></i>
-                <input type="text" id="searchInput" placeholder="Cari NIM atau nama..." oninput="filterRoster(this.value)">
-            </div>
-
-            <div class="roster-list" id="rosterList">
-                <div class="roster-empty" id="rosterEmpty">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    Memuat data mahasiswa...
-                </div>
-            </div>
-        </section>
-
-        <!-- ==== TOOLS PANEL ==== -->
-        <section class="panel panel-tools">
-            <div class="panel-header">
-                <div class="icon icon-warn">
-                    <i class="fas fa-toolbox"></i>
-                </div>
-                <div>
-                    <div class="title">Tools & Shortcuts</div>
-                    <div class="subtitle">Akses cepat</div>
-                </div>
-            </div>
-            <div class="panel-body">
-
-                <div class="qr-showcase">
-                    <div class="qr-box">
-                        <img id="qrImage" src="" alt="QR Code" />
-                    </div>
-                    <div class="qr-detail">
-                        <h4>QR Presensi Umum</h4>
-                        <p>Scan untuk buka form presensi kelas</p>
-                        <button class="mini-btn" onclick="downloadQR()">
-                            <i class="fas fa-download"></i> Download
-                        </button>
-                    </div>
-                </div>
-
-                <div class="input-group" style="margin-bottom:10px;">
-                    <input type="text" id="qrNimInput" placeholder="Generate QR by NIM..." maxlength="20">
-                    <button onclick="generateQRCode()">
-                        <i class="fas fa-bolt"></i> GO
-                    </button>
-                </div>
-
-                <div class="tools-grid">
-                    <button class="tool-btn" onclick="loadAllData()">
-                        <div class="tool-icon neon"><i class="fas fa-rotate"></i></div>
-                        <div class="tool-text">
-                            Refresh<small>Sync data</small>
-                        </div>
-                    </button>
-                    <a class="tool-btn" id="sheetLink" href="#" target="_blank">
-                        <div class="tool-icon cyan"><i class="fas fa-table"></i></div>
-                        <div class="tool-text">
-                            Sheet<small>Google</small>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </section>
-
-    </main>
-</div>
-
-<!-- ===== QR Preview Modal ===== -->
-<div class="qr-preview" id="qrPreview">
-    <div class="qr-preview-card">
-        <h3>
-            <i class="fas fa-qrcode"></i>
-            QR Code Mahasiswa
-        </h3>
-        <img id="qrResultImage" src="" alt="QR Code">
-        <div class="qr-info" id="qrInfo"></div>
-        <div class="qr-preview-actions">
-            <button class="dl" onclick="downloadQRCode()">
-                <i class="fas fa-download"></i> Download
+        </div>
+        <div class="scanner-actions">
+            <button class="btn btn-scan" id="btnScan" onclick="toggleScan()">
+                <i class="fas fa-play"></i> <span id="btnScanText">Mulai Scan</span>
             </button>
-            <button onclick="closeQRPreview()">
-                <i class="fas fa-times"></i> Tutup
+            <button class="btn btn-flash" id="btnFlash" onclick="toggleFlash()">
+                <i class="fas fa-bolt"></i>
             </button>
         </div>
     </div>
+
+    <!-- ROSTER -->
+    <div class="roster">
+        <div class="roster-header">
+            <div><i class="fas fa-users"></i> Daftar Mahasiswa</div>
+            <div class="count" id="totalText">0</div>
+        </div>
+        <div class="roster-list" id="rosterList">
+            <div class="loading">
+                <i class="fas fa-spinner fa-spin"></i>
+                Memuat data mahasiswa...
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<!-- ===== Toast ===== -->
-<div class="toast" id="status"></div>
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
 <script>
 /* ===================================================================
-   FRONTEND — Presensi Kelas QR  (Dashboard Layout)
+   KONFIGURASI — GANTI URL DI BAWAH DENGAN URL KAMU
    =================================================================== */
-
 const CONFIG = {
-  API_URL: 'https://script.google.com/macros/s/AKfycbwFaiXWeQmp9D1U6YKlNM2u28Dgp8mcnYmzWxoWXH_FS3Po3oWJt1-kknsCZ_yRDranPQ/exec',
-  SHEET_URL: 'https://docs.google.com/spreadsheets/d/1PXOSZAXZNg7hvX-33DglZlM3saj4yclUhiYepiFNYhI/edit?gid=0#gid=0',
-  SHEET_GID_MAHASISWA: '0',
-  SHEET_GID_PRESENSI: '646034675',
-  CACHE_KEY_MAHASISWA: 'presensi_mahasiswa_cache_v3',
-  CACHE_KEY_PRESENSI: 'presensi_hari_ini_cache_v3',
-  REFRESH_INTERVAL_MS: 30000,
-  RESCAN_DELAY_MS: 2500
+  // 👇👇👇 GANTI INI DENGAN URL WEB APP KAMU 👇👇👇
+  API_URL: 'https://script.google.com/macros/s/AKfycbwYp4E26f42diDjYW_n89Ykjqu_bm-LKj2cO3GOspa0npYVSIgqAdUx8JlUVx-0krT02g/exec',
+  
+  REFRESH_INTERVAL: 30000,
+  RESCAN_DELAY: 2500
 };
 
+/* ===== STATE ===== */
 const State = {
   scanner: null,
   scanning: false,
   flashOn: false,
   processing: false,
   mahasiswa: [],
-  presensiHariIni: {},
-  isOnline: false,
-  tanggalHariIni: '',
-  searchQuery: ''
+  presensi: {},
+  tanggal: ''
 };
 
+/* ===== DOM ===== */
 const $ = id => document.getElementById(id);
-const DOM = {
-  status: $('status'),
-  scanStatus: $('scanStatusText'),
-  btnStartScan: $('btnStartScan'),
-  btnFlash: $('btnFlash'),
-  qrImage: $('qrImage'),
-  rosterList: $('rosterList'),
-  rosterEmpty: $('rosterEmpty'),
-  totalMahasiswa: $('totalMahasiswa'),
-  statusDot: $('statusDot'),
-  statusLabel: $('statusLabel'),
-  qrNimInput: $('qrNimInput'),
-  qrResultImage: $('qrResultImage'),
-  qrInfo: $('qrInfo'),
-  qrPreview: $('qrPreview'),
-  hudStateText: $('hudStateText'),
-  hudState: $('hudState'),
-  hudNetwork: $('hudNetwork'),
-  topbarHadir: $('topbarHadir'),
-  topbarTotal: $('topbarTotal'),
-  statHadir: $('statHadir'),
-  statBelum: $('statBelum'),
-  statTotal: $('statTotal'),
-  statPercent: $('statPercent'),
-  progressFill: $('progressFill'),
-  statsDate: $('statsDate')
-};
 
-/* ================== UTIL ================== */
+/* ===== UTIL ===== */
 function todayStr() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-
-function formatDateID() {
-  const d = new Date();
-  const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
-  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-  return `${days[d.getDay()]}, ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
-}
-
 function escapeHtml(s) {
   if (s == null) return '';
-  return String(s)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function initials(n) {
+  if (!n) return '?';
+  const p = String(n).trim().split(/\s+/);
+  return p.length === 1 ? p[0].slice(0,2).toUpperCase() : (p[0][0] + p[p.length-1][0]).toUpperCase();
 }
 
-function initials(name) {
-  if (!name) return '?';
-  const p = String(name).trim().split(/\s+/);
-  if (p.length === 1) return p[0].slice(0,2).toUpperCase();
-  return (p[0][0] + p[p.length-1][0]).toUpperCase();
+let toastTimer;
+function showToast(msg, type = 'info', dur = 4000) {
+  const t = $('toast');
+  const icons = { success:'fa-circle-check', error:'fa-circle-exclamation', warning:'fa-triangle-exclamation', info:'fa-circle-info' };
+  t.innerHTML = `<i class="fas ${icons[type]}"></i> ${msg}`;
+  t.className = 'toast ' + type + ' show';
+  clearTimeout(toastTimer);
+  if (dur > 0) toastTimer = setTimeout(() => t.classList.remove('show'), dur);
 }
 
-function setConnectionStatus(status, message) {
-  if (!DOM.statusDot || !DOM.statusLabel) return;
-  DOM.statusDot.className = 'dot ' + status;
-  DOM.statusLabel.textContent = message;
-  State.isOnline = (status === 'online');
-  if (DOM.hudNetwork) {
-    DOM.hudNetwork.textContent = status === 'online' ? 'ONLINE' : (status === 'checking' ? 'SYNC' : 'OFFLINE');
-  }
+function setConn(status, msg) {
+  const dot = $('connDot'), txt = $('connText');
+  dot.className = 'dot ' + status;
+  txt.textContent = msg;
 }
 
-let statusTimer;
-function showStatus(message, type = 'info', duration = 4000) {
-  if (!DOM.status) return;
-  const iconMap = {
-    success: 'fa-circle-check',
-    error: 'fa-circle-exclamation',
-    warning: 'fa-triangle-exclamation',
-    info: 'fa-circle-info'
-  };
-  DOM.status.innerHTML = `<i class="fas ${iconMap[type]}"></i> ${message}`;
-  DOM.status.className = 'toast ' + type;
-  DOM.status.classList.add('show');
-  clearTimeout(statusTimer);
-  if (duration > 0) {
-    statusTimer = setTimeout(() => { DOM.status.classList.remove('show'); }, duration);
-  }
-}
-
-/* ================== API ================== */
+/* ===== API ===== */
 async function apiGet(action, params = {}) {
   const qs = new URLSearchParams({ action, t: Date.now(), ...params });
-  const res = await fetch(CONFIG.API_URL + '?' + qs.toString(), { method: 'GET', redirect: 'follow' });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
+  const r = await fetch(CONFIG.API_URL + '?' + qs.toString(), { redirect: 'follow' });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
 }
-
-async function apiPost(action, payload = {}) {
-  const res = await fetch(CONFIG.API_URL, {
+async function apiPost(action, data = {}) {
+  const r = await fetch(CONFIG.API_URL, {
     method: 'POST',
     redirect: 'follow',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action, ...payload })
+    body: JSON.stringify({ action, ...data })
   });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
 }
 
-/* ================== CACHE ================== */
-function loadCacheMahasiswa() {
-  try { const r = localStorage.getItem(CONFIG.CACHE_KEY_MAHASISWA); return r ? JSON.parse(r) : []; }
-  catch { return []; }
-}
-function saveCacheMahasiswa(d) { try { localStorage.setItem(CONFIG.CACHE_KEY_MAHASISWA, JSON.stringify(d)); } catch {} }
-
-function loadCachePresensi() {
+/* ===== LOAD DATA ===== */
+async function checkConn() {
+  setConn('checking', 'Mengecek...');
   try {
-    const r = localStorage.getItem(CONFIG.CACHE_KEY_PRESENSI);
-    if (!r) return null;
-    const p = JSON.parse(r);
-    if (p.tanggal !== todayStr()) return null;
-    return p.map || {};
-  } catch { return null; }
-}
-function saveCachePresensi(m) {
-  try { localStorage.setItem(CONFIG.CACHE_KEY_PRESENSI, JSON.stringify({ tanggal: todayStr(), map: m })); } catch {}
+    const j = await apiGet('ping');
+    if (j.success) { setConn('online', 'Terhubung'); return true; }
+    throw new Error('fail');
+  } catch { setConn('offline', 'Offline'); return false; }
 }
 
-/* ================== LOAD DATA ================== */
-async function checkConnection() {
-  setConnectionStatus('checking', 'Mengecek...');
+async function loadData() {
+  State.tanggal = todayStr();
+  
+  // Coba dari cache dulu
   try {
-    const json = await apiGet('ping');
-    if (json.success) { setConnectionStatus('online', 'Online'); return true; }
-    throw new Error(json.error || 'fail');
-  } catch { setConnectionStatus('offline', 'Offline'); return false; }
-}
-
-async function loadAllData() {
-  State.tanggalHariIni = todayStr();
-  if (DOM.statsDate) DOM.statsDate.textContent = formatDateID();
-
-  const cachedMhs = loadCacheMahasiswa();
-  if (cachedMhs.length) {
-    State.mahasiswa = cachedMhs;
-    State.presensiHariIni = loadCachePresensi() || {};
+    const c = localStorage.getItem('presensi_mhs_cache');
+    if (c) State.mahasiswa = JSON.parse(c);
+    const p = localStorage.getItem('presensi_hari_cache');
+    if (p) {
+      const parsed = JSON.parse(p);
+      if (parsed.tanggal === State.tanggal) State.presensi = parsed.map || {};
+    }
     renderRoster();
     renderStats();
-  }
-
-  const online = await checkConnection();
+  } catch {}
+  
+  // Cek koneksi
+  const online = await checkConn();
   if (!online) {
-    if (!cachedMhs.length) {
-      if (DOM.rosterEmpty) DOM.rosterEmpty.innerHTML = `
-        <i class="fas fa-wifi" style="color:var(--hot);font-size:28px;display:block;margin-bottom:12px;opacity:1;"></i>
-        Tidak ada koneksi & tidak ada cache<br><br>
-        <button onclick="loadAllData()" style="padding:8px 18px;background:linear-gradient(135deg,var(--neon),var(--neon-2));color:var(--ink-1);border:none;border-radius:10px;font-weight:700;font-family:inherit;cursor:pointer;font-size:11px;">
-          <i class="fas fa-sync-alt"></i> Coba Lagi
-        </button>`;
-    } else {
-      showStatus('Mode offline — data dari cache', 'warning', 3000);
+    if (!State.mahasiswa.length) {
+      $('rosterList').innerHTML = `
+        <div class="loading">
+          <i class="fas fa-wifi" style="color:var(--hot);"></i>
+          Tidak ada koneksi<br><br>
+          <button onclick="loadData()" style="padding:8px 16px;background:var(--neon);color:var(--bg);border:none;border-radius:10px;font-weight:700;cursor:pointer;">
+            Coba Lagi
+          </button>
+        </div>`;
     }
     return;
   }
-
+  
   try {
-    const mhsRes = await apiGet('get_all');
-    if (mhsRes.success && Array.isArray(mhsRes.data)) {
-      State.mahasiswa = mhsRes.data;
-      saveCacheMahasiswa(mhsRes.data);
+    const m = await apiGet('get_all');
+    if (m.success && Array.isArray(m.data)) {
+      State.mahasiswa = m.data;
+      localStorage.setItem('presensi_mhs_cache', JSON.stringify(m.data));
     }
-
-    const presRes = await apiGet('get_presensi', { tanggal: todayStr() });
-    if (presRes.success && Array.isArray(presRes.data)) {
+    
+    const p = await apiGet('get_presensi', { tanggal: State.tanggal });
+    if (p.success && Array.isArray(p.data)) {
       const map = {};
-      presRes.data.forEach(p => { if (p.nim) map[String(p.nim).trim()] = p; });
-      State.presensiHariIni = map;
-      saveCachePresensi(map);
+      p.data.forEach(x => { if (x.nim) map[String(x.nim).trim()] = x; });
+      State.presensi = map;
+      localStorage.setItem('presensi_hari_cache', JSON.stringify({ tanggal: State.tanggal, map }));
     }
-
+    
     renderRoster();
     renderStats();
-    showStatus(`${State.mahasiswa.length} mahasiswa · ${Object.keys(State.presensiHariIni).length} hadir`, 'success', 2500);
+    showToast(`${State.mahasiswa.length} mahasiswa · ${Object.keys(State.presensi).length} hadir`, 'success', 2500);
   } catch (err) {
     console.error(err);
-    if (State.mahasiswa.length) {
-      showStatus('Gagal sinkron — pakai cache', 'warning', 3500);
-      renderRoster();
-      renderStats();
-    } else {
-      if (DOM.rosterEmpty) DOM.rosterEmpty.innerHTML = `
-        <i class="fas fa-exclamation-circle" style="color:var(--hot);font-size:28px;display:block;margin-bottom:12px;opacity:1;"></i>
-        Gagal memuat data<br><br>
-        <button onclick="loadAllData()" style="padding:8px 18px;background:linear-gradient(135deg,var(--neon),var(--neon-2));color:var(--ink-1);border:none;border-radius:10px;font-weight:700;font-family:inherit;cursor:pointer;font-size:11px;">
-          <i class="fas fa-sync-alt"></i> Coba Lagi
-        </button>`;
-    }
+    showToast('Gagal memuat: ' + err.message, 'error', 4000);
   }
 }
 
-/* ================== RENDER ROSTER ================== */
+/* ===== RENDER ===== */
 function renderRoster() {
-  if (!DOM.rosterList) return;
-  const q = State.searchQuery.toLowerCase().trim();
-
-  const filtered = State.mahasiswa.filter(m => {
-    if (!q) return true;
-    const nim = String(m.nim || '').toLowerCase();
-    const nama = String(m.nama || '').toLowerCase();
-    return nim.includes(q) || nama.includes(q);
-  });
-
+  const list = $('rosterList');
   if (!State.mahasiswa.length) {
-    DOM.rosterList.innerHTML = `
-      <div class="roster-empty">
+    list.innerHTML = `
+      <div class="loading">
         <i class="fas fa-inbox"></i>
         Belum ada data mahasiswa
       </div>`;
     return;
   }
-
-  if (!filtered.length) {
-    DOM.rosterList.innerHTML = `
-      <div class="roster-empty">
-        <i class="fas fa-search"></i>
-        Tidak ada hasil untuk "${escapeHtml(State.searchQuery)}"
-      </div>`;
-    return;
-  }
-
-  DOM.rosterList.innerHTML = filtered.map(mhs => {
-    const nim = String(mhs.nim || '').trim();
-    const hadir = !!State.presensiHariIni[nim];
+  
+  list.innerHTML = State.mahasiswa.map(m => {
+    const nim = String(m.nim || '').trim();
+    const hadir = !!State.presensi[nim];
     return `
-      <div class="roster-item ${hadir ? 'hadir' : ''}">
-        <div class="roster-avatar">${escapeHtml(initials(mhs.nama))}</div>
-        <div class="roster-info">
-          <div class="roster-name">${escapeHtml(mhs.nama || '-')}</div>
-          <div class="roster-meta">
-            <span class="nim-tag">${escapeHtml(nim || '-')}</span>
-            <span>·</span>
-            <span>${escapeHtml(mhs.kelas || '-')}</span>
-            <span>·</span>
-            <span>${escapeHtml(mhs.jurusan || '-')}</span>
+      <div class="mhs ${hadir ? 'hadir' : ''}">
+        <div class="mhs-avatar">${escapeHtml(initials(m.nama))}</div>
+        <div class="mhs-info">
+          <div class="mhs-name">${escapeHtml(m.nama || '-')}</div>
+          <div class="mhs-meta">
+            <span class="nim">${escapeHtml(nim)}</span> · ${escapeHtml(m.kelas || '-')}
           </div>
         </div>
-        <span class="roster-status ${hadir ? 'hadir' : 'belum'}">
-          ${hadir ? 'HADIR' : 'BELUM'}
-        </span>
+        <span class="mhs-status ${hadir ? 'hadir' : 'belum'}">${hadir ? 'HADIR' : 'BELUM'}</span>
       </div>`;
   }).join('');
 }
 
-function filterRoster(value) {
-  State.searchQuery = value;
-  renderRoster();
-}
-
-/* ================== RENDER STATS ================== */
 function renderStats() {
   const total = State.mahasiswa.length;
-  const hadir = Object.keys(State.presensiHariIni).length;
-  const belum = Math.max(0, total - hadir);
-  const percent = total ? Math.round((hadir / total) * 100) : 0;
-
-  if (DOM.statHadir) DOM.statHadir.textContent = hadir;
-  if (DOM.statBelum) DOM.statBelum.textContent = belum;
-  if (DOM.statTotal) DOM.statTotal.textContent = total;
-  if (DOM.statPercent) DOM.statPercent.innerHTML = `${percent}<span class="unit">%</span>`;
-  if (DOM.progressFill) DOM.progressFill.style.width = percent + '%';
-  if (DOM.topbarHadir) DOM.topbarHadir.textContent = hadir;
-  if (DOM.topbarTotal) DOM.topbarTotal.textContent = total;
-  if (DOM.totalMahasiswa) DOM.totalMahasiswa.textContent = `${hadir}/${total}`;
+  const hadir = Object.keys(State.presensi).length;
+  $('statHadir').textContent = hadir;
+  $('statBelum').textContent = Math.max(0, total - hadir);
+  $('totalText').textContent = `${hadir}/${total}`;
 }
 
-/* ================== QR UMUM ================== */
-function generateQR() {
-  if (!DOM.qrImage) return;
-  const qrData = {
-    nim: 'ABSENSI-KELAS',
-    nama: 'Presensi Kelas',
-    link_sheet: CONFIG.SHEET_URL,
-    timestamp: new Date().toISOString()
-  };
-  DOM.qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(JSON.stringify(qrData))}`;
+/* ===== SCANNER ===== */
+function toggleScan() {
+  if (State.scanning) stopScan();
+  else startScan();
 }
 
-function downloadQR() {
-  if (!DOM.qrImage.src) { showStatus('QR Code belum siap', 'error'); return; }
-  const a = document.createElement('a');
-  a.download = 'qr-presensi-kelas.png';
-  a.href = DOM.qrImage.src;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  showStatus('QR berhasil didownload', 'success');
-}
-
-/* ================== QR PER MAHASISWA ================== */
-function generateQRCode() {
-  const nim = DOM.qrNimInput.value.trim();
-  if (!nim) { showStatus('Masukkan NIM dulu', 'error'); DOM.qrNimInput.focus(); return; }
-  if (nim.length < 3) { showStatus('NIM minimal 3 karakter', 'error'); return; }
-
-  const mhs = State.mahasiswa.find(m => String(m.nim).trim() === nim);
-  if (!mhs) { showStatus(`NIM ${escapeHtml(nim)} tidak terdaftar`, 'error'); return; }
-
-  const qrData = {
-    nim: mhs.nim, nama: mhs.nama, kelas: mhs.kelas, jurusan: mhs.jurusan,
-    link_sheet: CONFIG.SHEET_URL, timestamp: new Date().toISOString()
-  };
-  DOM.qrResultImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(JSON.stringify(qrData))}`;
-  DOM.qrInfo.innerHTML = `
-    <strong>NIM:</strong> ${escapeHtml(mhs.nim)}<br>
-    <strong>Nama:</strong> ${escapeHtml(mhs.nama)}<br>
-    <strong>Kelas:</strong> ${escapeHtml(mhs.kelas)}<br>
-    <strong>Jurusan:</strong> ${escapeHtml(mhs.jurusan)}`;
-  DOM.qrPreview.classList.add('show');
-  showStatus(`QR dibuat untuk ${escapeHtml(mhs.nama)}`, 'success');
-}
-
-function downloadQRCode() {
-  if (!DOM.qrResultImage.src) { showStatus('Tidak ada QR', 'error'); return; }
-  const a = document.createElement('a');
-  const nim = DOM.qrNimInput.value.trim() || 'mahasiswa';
-  a.download = `qr-code-${nim}.png`;
-  a.href = DOM.qrResultImage.src;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  showStatus('QR mahasiswa didownload', 'success');
-}
-
-function closeQRPreview() {
-  DOM.qrPreview.classList.remove('show');
-  DOM.qrNimInput.value = '';
-}
-
-/* ================== SCANNER ================== */
-function toggleScanner() {
-  if (State.scanning) stopScanner();
-  else startScanner();
-}
-
-function startScanner() {
+function startScan() {
   if (State.scanning) return;
   if (State.scanner) { try { State.scanner.clear(); } catch {} State.scanner = null; }
-
-  const readerEl = $('qr-reader');
-  if (readerEl) readerEl.innerHTML = '';
-
-  if (DOM.btnStartScan) {
-    DOM.btnStartScan.classList.add('stop');
-    DOM.btnStartScan.innerHTML = '<i class="fas fa-stop"></i> <span id="btnScanLabel">Stop Scan</span>';
-  }
-
+  
+  $('reader').innerHTML = '';
+  $('btnScan').classList.add('stop');
+  $('btnScanText').textContent = 'Stop Scan';
+  
   try {
-    State.scanner = new Html5Qrcode("qr-reader", {
+    State.scanner = new Html5Qrcode("reader", {
       verbose: false,
       formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
     });
-
-    const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 4/3 };
-    const onSuccess = (text) => onScanSuccess(text);
-    const onError = () => {};
-
-    State.scanner.start({ facingMode: "environment" }, config, onSuccess, onError)
-      .then(() => onScannerStarted())
+    
+    const cfg = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 4/3 };
+    const onOk = t => onScan(t);
+    const onErr = () => {};
+    
+    State.scanner.start({ facingMode: "environment" }, cfg, onOk, onErr)
+      .then(() => onStart())
       .catch(() => {
-        State.scanner.start({ facingMode: "user" }, config, onSuccess, onError)
-          .then(() => onScannerStarted())
-          .catch(err2 => {
-            showStatus('Gagal akses kamera: ' + err2.message, 'error', 0);
-            resetScannerButton();
+        State.scanner.start({ facingMode: "user" }, cfg, onOk, onErr)
+          .then(() => onStart())
+          .catch(e => {
+            showToast('Gagal kamera: ' + e.message, 'error', 0);
+            resetBtn();
           });
       });
-  } catch (err) {
-    showStatus('Gagal inisialisasi scanner', 'error', 0);
-    resetScannerButton();
+  } catch (e) {
+    showToast('Error init scanner', 'error', 0);
+    resetBtn();
   }
 }
 
-function onScannerStarted() {
+function onStart() {
   State.scanning = true;
-  if (DOM.scanStatus) DOM.scanStatus.textContent = '🔍 Mendeteksi QR Code...';
-  if (DOM.hudStateText) DOM.hudStateText.textContent = 'SCANNING';
-  if (DOM.hudState) DOM.hudState.classList.remove('paused');
-  showStatus('Kamera aktif', 'info', 2500);
+  $('scanText').textContent = '🔍 Arahkan ke QR Code...';
+  showToast('Kamera aktif', 'info', 2000);
 }
 
-function stopScanner() {
+function stopScan() {
   if (State.scanner && State.scanning) {
-    State.scanner.stop()
-      .then(() => {
-        try { State.scanner.clear(); } catch {}
-        State.scanner = null;
-        State.scanning = false;
-        resetScannerButton();
-        if (DOM.scanStatus) DOM.scanStatus.textContent = '⏸ Scanner berhenti';
-        if (DOM.hudStateText) DOM.hudStateText.textContent = 'PAUSED';
-        if (DOM.hudState) DOM.hudState.classList.add('paused');
-      })
-      .catch(() => {});
+    State.scanner.stop().then(() => {
+      try { State.scanner.clear(); } catch {}
+      State.scanner = null;
+      State.scanning = false;
+      resetBtn();
+      $('scanText').textContent = '⏸ Scanner berhenti';
+    }).catch(() => {});
   } else {
     State.scanning = false;
-    resetScannerButton();
+    resetBtn();
   }
 }
 
-function resetScannerButton() {
-  if (!DOM.btnStartScan) return;
-  DOM.btnStartScan.classList.remove('stop');
-  DOM.btnStartScan.innerHTML = '<i class="fas fa-play"></i> <span id="btnScanLabel">Mulai Scan</span>';
+function resetBtn() {
+  $('btnScan').classList.remove('stop');
+  $('btnScanText').textContent = 'Mulai Scan';
 }
 
-/* ================== SCAN SUCCESS ================== */
-function onScanSuccess(decodedText) {
+/* ===== SCAN ===== */
+function onScan(text) {
   if (State.processing) return;
   State.processing = true;
-
+  
   if (State.scanner && State.scanning) {
-    State.scanner.stop()
-      .then(() => { try { State.scanner.clear(); } catch {} State.scanner = null; State.scanning = false; resetScannerButton(); })
-      .catch(() => {});
+    State.scanner.stop().then(() => {
+      try { State.scanner.clear(); } catch {}
+      State.scanner = null;
+      State.scanning = false;
+      resetBtn();
+    }).catch(() => {});
   }
-
-  processPresensi(decodedText);
+  
+  processPresensi(text);
 }
 
-/* ================== PROSES PRESENSI ================== */
-async function processPresensi(qrData) {
-  const tanggal = todayStr();
+async function processPresensi(qr) {
   try {
-    showStatus('Memproses presensi...', 'info', 0);
-
+    showToast('Memproses...', 'info', 0);
+    
     let nim = '';
-    try { const parsed = JSON.parse(qrData); nim = String(parsed.nim || '').trim(); }
-    catch { nim = String(qrData || '').trim(); }
-
-    if (!nim || nim.length < 3) { showStatus('NIM tidak valid', 'error'); return; }
-
-    const mhs = State.mahasiswa.find(m => String(m.nim).trim() === nim);
-    if (!mhs) { showStatus(`NIM ${escapeHtml(nim)} tidak terdaftar`, 'error'); return; }
-
-    if (State.presensiHariIni[nim]) {
-      showStatus(`${escapeHtml(mhs.nama)} sudah presensi`, 'warning');
-      if (DOM.scanStatus) DOM.scanStatus.textContent = '⚠️ Sudah presensi';
+    try {
+      const p = JSON.parse(qr);
+      nim = String(p.nim || '').trim();
+    } catch {
+      nim = String(qr || '').trim();
+    }
+    
+    if (!nim || nim.length < 3) {
+      showToast('NIM tidak valid', 'error');
       return;
     }
-
+    
+    const m = State.mahasiswa.find(x => String(x.nim).trim() === nim);
+    if (!m) {
+      showToast(`NIM ${nim} tidak terdaftar`, 'error');
+      return;
+    }
+    
+    if (State.presensi[nim]) {
+      showToast(`${m.nama} sudah presensi`, 'warning');
+      $('scanText').textContent = '⚠️ Sudah presensi';
+      return;
+    }
+    
     const payload = {
-      nim, nama: mhs.nama || '', kelas: mhs.kelas || '',
-      jurusan: mhs.jurusan || '', mataKuliah: 'Presensi Kelas', status: 'Hadir'
+      nim, nama: m.nama || '', kelas: m.kelas || '',
+      jurusan: m.jurusan || '', mataKuliah: 'Presensi Kelas', status: 'Hadir'
     };
-
-    let result;
-    try { result = await apiPost('presensi', payload); }
-    catch (netErr) {
-      State.presensiHariIni[nim] = { nim, tanggal, offline: true, waktu: new Date().toLocaleString('id-ID') };
-      saveCachePresensi(State.presensiHariIni);
+    
+    let res;
+    try {
+      res = await apiPost('presensi', payload);
+    } catch (e) {
+      // Offline: simpan lokal
+      State.presensi[nim] = { nim, waktu: new Date().toLocaleString('id-ID'), offline: true };
+      localStorage.setItem('presensi_hari_cache', JSON.stringify({ tanggal: State.tanggal, map: State.presensi }));
       renderRoster();
       renderStats();
-      showStatus(`Offline — ${escapeHtml(mhs.nama)} dicatat lokal`, 'warning', 5000);
-      if (DOM.scanStatus) DOM.scanStatus.textContent = '📴 Tersimpan lokal';
+      showToast(`Offline — ${m.nama} dicatat lokal`, 'warning', 5000);
       return;
     }
-
-    if (result.success) {
-      State.presensiHariIni[nim] = { nim, tanggal, waktu: result.waktu || '', nama: mhs.nama };
-      saveCachePresensi(State.presensiHariIni);
+    
+    if (res.success) {
+      State.presensi[nim] = { nim, waktu: res.waktu || '' };
+      localStorage.setItem('presensi_hari_cache', JSON.stringify({ tanggal: State.tanggal, map: State.presensi }));
       renderRoster();
       renderStats();
-      showStatus(`${escapeHtml(mhs.nama)} HADIR ✅`, 'success', 3500);
-      if (DOM.scanStatus) DOM.scanStatus.textContent = '✅ Hadir!';
-    } else if (result.already) {
-      State.presensiHariIni[nim] = { nim, tanggal, waktu: result.data?.waktu || '' };
-      saveCachePresensi(State.presensiHariIni);
+      showToast(`✅ ${m.nama} HADIR!`, 'success', 3500);
+      $('scanText').textContent = '✅ Hadir!';
+    } else if (res.already) {
+      State.presensi[nim] = { nim, waktu: res.data?.waktu || '' };
+      localStorage.setItem('presensi_hari_cache', JSON.stringify({ tanggal: State.tanggal, map: State.presensi }));
       renderRoster();
       renderStats();
-      showStatus(`${escapeHtml(mhs.nama)} sudah presensi (server)`, 'warning', 3500);
-      if (DOM.scanStatus) DOM.scanStatus.textContent = '⚠️ Sudah presensi';
+      showToast(`${m.nama} sudah presensi`, 'warning', 3500);
+      $('scanText').textContent = '⚠️ Sudah presensi';
     } else {
-      showStatus(result.error || 'Gagal menyimpan', 'error', 4000);
+      showToast(res.error || 'Gagal menyimpan', 'error', 4000);
     }
   } catch (err) {
     console.error(err);
-    showStatus('Error: ' + err.message, 'error', 4000);
+    showToast('Error: ' + err.message, 'error', 4000);
   } finally {
     setTimeout(() => {
       State.processing = false;
-      if (DOM.scanStatus) DOM.scanStatus.textContent = 'Arahkan ke QR Code';
-      if (!State.scanning) startScanner();
-    }, CONFIG.RESCAN_DELAY_MS);
+      $('scanText').textContent = 'Arahkan ke QR Code';
+      if (!State.scanning) startScan();
+    }, CONFIG.RESCAN_DELAY);
   }
 }
 
-/* ================== FLASH ================== */
+/* ===== FLASH ===== */
 async function toggleFlash() {
   State.flashOn = !State.flashOn;
-  if (!DOM.btnFlash) return;
-  DOM.btnFlash.classList.toggle('active', State.flashOn);
-
+  $('btnFlash').classList.toggle('active', State.flashOn);
   try {
-    const video = document.querySelector('#qr-reader video');
-    if (!video || !video.srcObject) return;
-    const track = video.srcObject.getVideoTracks()[0];
-    if (!track) return;
-    const caps = track.getCapabilities ? track.getCapabilities() : {};
-    if (caps.torch) await track.applyConstraints({ advanced: [{ torch: State.flashOn }] });
-  } catch (e) {}
+    const v = document.querySelector('#reader video');
+    if (!v || !v.srcObject) return;
+    const t = v.srcObject.getVideoTracks()[0];
+    if (!t) return;
+    const c = t.getCapabilities ? t.getCapabilities() : {};
+    if (c.torch) await t.applyConstraints({ advanced: [{ torch: State.flashOn }] });
+  } catch {}
 }
 
-/* ================== IZIN KAMERA ================== */
-async function checkCameraPermission() {
-  try {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      showStatus('Browser tidak mendukung kamera', 'error', 0);
-      return false;
-    }
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-    stream.getTracks().forEach(t => t.stop());
-    return true;
-  } catch {
-    showStatus('Izin kamera diperlukan', 'error', 0);
-    return false;
-  }
-}
-
-/* ================== INIT ================== */
+/* ===== INIT ===== */
 async function init() {
-  State.tanggalHariIni = todayStr();
-
-  const sheetLinkPres = CONFIG.SHEET_URL + '#gid=' + CONFIG.SHEET_GID_PRESENSI;
-  if ($('sheetLink')) $('sheetLink').href = sheetLinkPres;
-  if ($('railSheetLink')) $('railSheetLink').href = sheetLinkPres;
-
-  generateQR();
-  if (DOM.statsDate) DOM.statsDate.textContent = formatDateID();
-
-  await loadAllData();
-  setInterval(() => { loadAllData(); }, CONFIG.REFRESH_INTERVAL_MS);
-
-  const cameraReady = await checkCameraPermission();
-  if (cameraReady) setTimeout(startScanner, 800);
+  await loadData();
+  setInterval(loadData, CONFIG.REFRESH_INTERVAL);
+  
+  // Auto-start scanner
+  try {
+    const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+    s.getTracks().forEach(t => t.stop());
+    setTimeout(startScan, 800);
+  } catch (e) {
+    showToast('Izinkan kamera untuk scan', 'warning', 5000);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
-window.addEventListener('beforeunload', function () {
-  if (State.scanner && State.scanning) {
-    State.scanner.stop().then(() => { try { State.scanner.clear(); } catch {} }).catch(() => {});
-  }
-});
 </script>
 
 </body>
